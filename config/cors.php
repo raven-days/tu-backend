@@ -7,6 +7,7 @@ return [
 
     'allowed_origins' => [
         'https://layanan-tu-sman104.vercel.app',
+        'http://localhost:5173',
     ],
 
     'allowed_origins_patterns' => [],
