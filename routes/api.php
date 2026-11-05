@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminPegawaiController;
+use App\Http\Controllers\Admin\AdminPengumumanController;
 use App\Http\Controllers\Admin\AdminSkController;
 use App\Http\Controllers\Admin\RingkasanController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PegawaiController;
+use App\Http\Controllers\Api\PengumumanController;
 use App\Http\Controllers\Api\SuratKeputusanController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::get('/sk', [SuratKeputusanController::class, 'index']);
 Route::get('/pegawai', [PegawaiController::class, 'index']);
+Route::get('/pengumuman', [PengumumanController::class, 'index']);
+Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show']);
 
 // Perlu login
 Route::middleware('auth:sanctum')->group(function () {
@@ -29,5 +33,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pegawai', [AdminPegawaiController::class, 'index']);
         Route::post('/pegawai/import', [AdminPegawaiController::class, 'import']);
         Route::delete('/pegawai/{pegawai}', [AdminPegawaiController::class, 'destroy']);
+
+        Route::post('/pengumuman', [AdminPengumumanController::class, 'store']);
+        Route::post('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'update']);
+        Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy']);
     });
 });
