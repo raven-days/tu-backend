@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminPegawaiController;
+use App\Http\Controllers\Admin\AdminPengajuanController;
 use App\Http\Controllers\Admin\AdminPengumumanController;
 use App\Http\Controllers\Admin\AdminSkController;
 use App\Http\Controllers\Admin\RingkasanController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CekStatusController;
 use App\Http\Controllers\Api\PegawaiController;
+use App\Http\Controllers\Api\PengajuanController;
 use App\Http\Controllers\Api\PengumumanController;
 use App\Http\Controllers\Api\SuratKeputusanController;
 use Illuminate\Support\Facades\Route;
@@ -16,15 +19,30 @@ Route::get('/sk', [SuratKeputusanController::class, 'index']);
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 Route::get('/pengumuman', [PengumumanController::class, 'index']);
 Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show']);
+Route::get('/cek-status/{nomor}', [CekStatusController::class, 'show'])->middleware('throttle:20,1');
 
 // Perlu login
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    // Detail dan lampiran: pemilik pengajuan atau TU (izin dicek di controller)
+    Route::get('/pengajuan/lampiran/{lampiran}', [PengajuanController::class, 'lampiran']);
+    Route::get('/pengajuan/{pengajuan:nomor}', [PengajuanController::class, 'show']);
+
+    // Siswa/orang tua dan guru
+    Route::middleware('role:siswa,guru')->group(function () {
+        Route::get('/pengajuan', [PengajuanController::class, 'index']);
+        Route::post('/pengajuan', [PengajuanController::class, 'store']);
+        Route::post('/pengajuan/{pengajuan:nomor}/kirim-ulang', [PengajuanController::class, 'kirimUlang']);
+    });
+
     // Khusus staf TU
     Route::middleware('role:tu')->prefix('admin')->group(function () {
         Route::get('/ringkasan', [RingkasanController::class, 'index']);
+
+        Route::get('/pengajuan', [AdminPengajuanController::class, 'index']);
+        Route::post('/pengajuan/{pengajuan:nomor}/status', [AdminPengajuanController::class, 'status']);
 
         Route::post('/sk', [AdminSkController::class, 'store']);
         Route::post('/sk/{sk}', [AdminSkController::class, 'update']);
