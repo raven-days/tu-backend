@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\KontakController;
+use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Admin\AdminKontakController;
+use App\Http\Controllers\Admin\AdminFaqController;
 use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\KonfirmasiSandiController;
@@ -28,6 +32,8 @@ Route::get('/banner', [BannerController::class, 'index']);
 Route::get('/hero', [HeroController::class, 'show']);
 Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show']);
 Route::get('/cek-status/{nomor}', [CekStatusController::class, 'show'])->middleware('throttle:20,1');
+Route::get('/kontak', [KontakController::class, 'show']);
+Route::get('/faq', [FaqController::class, 'index']);
 
 // Perlu login
 Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
@@ -92,6 +98,15 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
             Route::post('/pengumuman', [AdminPengumumanController::class, 'store']);
             Route::post('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'update']);
             Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->middleware('sandi.ulang');
+        });
+        Route::middleware('izin:kontak')->group(function () {
+            Route::get('/kontak', [AdminKontakController::class, 'show']);
+            Route::put('/kontak', [AdminKontakController::class, 'update']);
+            Route::get('/faq', [AdminFaqController::class, 'index']);
+            Route::post('/faq', [AdminFaqController::class, 'store']);
+            Route::put('/faq/{faq}', [AdminFaqController::class, 'update']);
+            Route::post('/faq/{faq}/geser', [AdminFaqController::class, 'geser']);
+            Route::delete('/faq/{faq}', [AdminFaqController::class, 'destroy'])->middleware('sandi.ulang');
         });
         Route::middleware('izin:banner')->group(function () {
             Route::get('/banner', [AdminBannerController::class, 'index']);

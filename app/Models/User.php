@@ -15,7 +15,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     /** Daftar modul yang bisa diberi izin kepada petugas TU. */
-    public const MODUL = ['pengajuan', 'sk', 'pegawai', 'pengumuman', 'banner'];
+    public const MODUL = ['pengajuan', 'sk', 'pegawai', 'pengumuman', 'banner', 'kontak'];
     public function adalahAdmin(): bool
     {
         return $this->role === 'tu' && $this->is_admin;
