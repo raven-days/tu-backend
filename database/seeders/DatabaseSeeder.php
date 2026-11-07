@@ -7,11 +7,13 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-public function run(): void
-{
-    User::updateOrCreate(
-        ['email' => 'tu@sman104.test'],
-        ['name' => 'Petugas TU', 'username' => 'tu', 'password' => 'initu', 'role' => 'tu']
-    );
-}
+    public function run(): void
+    {
+        $tu = User::updateOrCreate(
+            ['email' => 'tu@sman104.test'],
+            ['name' => 'Petugas TU', 'username' => 'tu', 'password' => 'initu', 'role' => 'tu']
+        );
+
+        $tu->forceFill(['is_admin' => true, 'izin' => User::MODUL])->save();
+    }
 }

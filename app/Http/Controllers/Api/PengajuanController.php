@@ -140,7 +140,7 @@ class PengajuanController extends Controller
     {
         $u = $request->user();
 
-        abort_unless($u->role === 'tu' || $pengajuan->user_id === $u->id, 403, 'Anda tidak memiliki akses.');
+        abort_unless($u->punyaIzin('pengajuan') || $pengajuan->user_id === $u->id, 403, 'Anda tidak memiliki akses.');
     }
 
     private function simpanLampiran(Pengajuan $p, array $files): void

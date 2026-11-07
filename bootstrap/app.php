@@ -12,9 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
-    'role' => \App\Http\Middleware\EnsureRole::class,
-]);
+            'role' => \App\Http\Middleware\EnsureRole::class,
+            'aktif' => \App\Http\Middleware\EnsureAkunAktif::class,
+            'izin' => \App\Http\Middleware\EnsureIzin::class,
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'sandi.ulang' => \App\Http\Middleware\EnsureSandiUlang::class,
+            'sandi.baru' => \App\Http\Middleware\EnsureSandiBaru::class,
+            ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

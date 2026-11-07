@@ -7,6 +7,7 @@ use App\Models\Pegawai;
 use App\Services\PegawaiImporter;
 use Illuminate\Http\Request;
 use RuntimeException;
+use App\Models\AuditLog;
 
 class AdminPegawaiController extends Controller
 {
@@ -38,7 +39,7 @@ class AdminPegawaiController extends Controller
         }
 
         $total = $n['guru'] + $n['tendik'];
-
+          AuditLog::catat('pegawai_impor', "Impor pegawai dari Excel: {$n['guru']} guru, {$n['tendik']} tendik (data lama diganti).");
         return response()->json(array_merge($n, [
             'message' => "{$total} pegawai berhasil diimpor ({$n['guru']} guru, {$n['tendik']} tendik).",
         ]));
@@ -46,6 +47,7 @@ class AdminPegawaiController extends Controller
 
     public function destroy(Pegawai $pegawai)
     {
+          AuditLog::catat('pegawai_hapus', "Hapus pegawai: {$pegawai->nama}", null, 'pegawai', $pegawai->id);
         $pegawai->delete();
 
         return response()->json(['message' => 'Pegawai dihapus.']);

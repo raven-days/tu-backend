@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pengumuman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\AuditLog;
 
 class AdminPengumumanController extends Controller
 {
@@ -17,7 +18,10 @@ class AdminPengumumanController extends Controller
             $data['gambar_path'] = $request->file('gambar')->store('pengumuman', 'public');
         }
 
-        return response()->json(Pengumuman::create($data)->tampil(), 201);
+        $p = Pengumuman::create($data);
+        AuditLog::catat('pengumuman_tambah', "Tambah pengumuman: {$p->judul}", null, 'pengumuman', $p->id);
+
+        return response()->json($p->tampil(), 201);
     }
 
     public function update(Request $request, Pengumuman $pengumuman)
@@ -33,12 +37,13 @@ class AdminPengumumanController extends Controller
         }
 
         $pengumuman->update($data);
-
+          AuditLog::catat('pengumuman_ubah', "Ubah pengumuman: {$pengumuman->judul}", null, 'pengumuman', $pengumuman->id);
         return response()->json($pengumuman->tampil());
     }
 
     public function destroy(Pengumuman $pengumuman)
     {
+          AuditLog::catat('pengumuman_hapus', "Hapus pengumuman: {$pengumuman->judul}", null, 'pengumuman', $pengumuman->id);
         $this->hapusFile($pengumuman);
         $pengumuman->delete();
 

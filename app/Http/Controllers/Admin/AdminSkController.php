@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SuratKeputusan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\AuditLog;
 
 class AdminSkController extends Controller
 {
@@ -18,6 +19,7 @@ class AdminSkController extends Controller
         }
 
         $sk = SuratKeputusan::create($data);
+        AuditLog::catat('sk_tambah', "Tambah SK {$sk->nomor}.", null, 'sk', $sk->id);
 
         return response()->json(['id' => $sk->id], 201);
     }
@@ -34,12 +36,14 @@ class AdminSkController extends Controller
         }
 
         $sk->update($data);
+        AuditLog::catat('sk_ubah', "Ubah SK {$sk->nomor}.", null, 'sk', $sk->id);
 
         return response()->json(['id' => $sk->id]);
     }
 
     public function destroy(SuratKeputusan $sk)
     {
+        AuditLog::catat('sk_hapus', "Hapus SK {$sk->nomor}: {$sk->tentang}", null, 'sk', $sk->id);
         if ($sk->file_path) {
             Storage::disk('public')->delete($sk->file_path);
         }

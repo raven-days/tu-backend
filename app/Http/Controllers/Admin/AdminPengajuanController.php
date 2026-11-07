@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pengajuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\AuditLog;
 
 class AdminPengajuanController extends Controller
 {
@@ -80,6 +81,7 @@ class AdminPengajuanController extends Controller
             ]);
             $pengajuan->catat($tujuan, $tujuan, $request->user()->name, $catatan ?: null, $field ?: null);
         });
+        AuditLog::catat('pengajuan_status', "Ubah status {$pengajuan->nomor} menjadi {$tujuan}.", null, 'pengajuan', $pengajuan->id);
 
         return response()->json($pengajuan->fresh(['user', 'riwayat', 'lampiran'])->tampil());
     }
