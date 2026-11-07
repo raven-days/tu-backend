@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBannerController;
+use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\KonfirmasiSandiController;
 use App\Http\Controllers\Admin\AdminAkunController;
 use App\Http\Controllers\Admin\AdminAuditController;
@@ -15,13 +17,15 @@ use App\Http\Controllers\Api\PengajuanController;
 use App\Http\Controllers\Api\PengumumanController;
 use App\Http\Controllers\Api\SuratKeputusanController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Api\HeroController;
 
 // Publik
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::get('/sk', [SuratKeputusanController::class, 'index']);
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 Route::get('/pengumuman', [PengumumanController::class, 'index']);
+Route::get('/banner', [BannerController::class, 'index']);
+Route::get('/hero', [HeroController::class, 'show']);
 Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show']);
 Route::get('/cek-status/{nomor}', [CekStatusController::class, 'show'])->middleware('throttle:20,1');
 
@@ -89,6 +93,14 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
             Route::post('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'update']);
             Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->middleware('sandi.ulang');
         });
+        Route::middleware('izin:banner')->group(function () {
+            Route::get('/banner', [AdminBannerController::class, 'index']);
+            Route::post('/banner', [AdminBannerController::class, 'store']);
+            Route::post('/banner/{banner}/geser', [AdminBannerController::class, 'geser']);
+            Route::post('/banner/{banner}', [AdminBannerController::class, 'update']);
+            Route::delete('/banner/{banner}', [AdminBannerController::class, 'destroy'])->middleware('sandi.ulang');
+            Route::post('/hero', [HeroController::class, 'update']);
+            });
     });
     }); 
 });
