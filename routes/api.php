@@ -22,9 +22,12 @@ use App\Http\Controllers\Api\PengumumanController;
 use App\Http\Controllers\Api\SuratKeputusanController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HeroController;
+use App\Http\Controllers\Api\LupaSandiController;
+use App\Http\Controllers\Admin\AdminResetController;
 
 // Publik
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('/lupa-kata-sandi', [LupaSandiController::class, 'store'])->middleware('throttle:3,1');
 Route::get('/sk', [SuratKeputusanController::class, 'index']);
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 Route::get('/pengumuman', [PengumumanController::class, 'index']);
@@ -66,6 +69,8 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
             Route::get('/audit', [AdminAuditController::class, 'index']);
             Route::get('/akun', [AdminAkunController::class, 'index']);
             Route::post('/akun/{user}/buka-kunci', [AdminAkunController::class, 'bukaKunci']);
+            Route::get('/permintaan-reset', [AdminResetController::class, 'index']);
+            Route::post('/permintaan-reset/{permintaan}', [AdminResetController::class, 'proses']);
 
             // Aksi sensitif: wajib konfirmasi kata sandi (berlaku 5 menit)
             Route::middleware('sandi.ulang')->group(function () {
@@ -80,7 +85,9 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
         Route::middleware('izin:pengajuan')->group(function () {
             Route::get('/pengajuan', [AdminPengajuanController::class, 'index']);
             Route::post('/pengajuan/{pengajuan:nomor}/status', [AdminPengajuanController::class, 'status']);
-        });
+            Route::post('/pengajuan/{pengajuan:nomor}/hasil', [AdminPengajuanController::class, 'hasil']);
+            Route::delete('/pengajuan/{pengajuan:nomor}/hasil/{lampiran}', [AdminPengajuanController::class, 'hapusHasil']);
+            });
 
         Route::middleware('izin:sk')->group(function () {
             Route::post('/sk', [AdminSkController::class, 'store']);

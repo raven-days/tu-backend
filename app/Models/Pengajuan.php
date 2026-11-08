@@ -12,12 +12,13 @@ class Pengajuan extends Model
 
     protected $fillable = [
         'nomor', 'user_id', 'jenis', 'perihal', 'tanggal_dibutuhkan',
-        'keterangan', 'status', 'catatan_field', 'revisi',
+        'keterangan', 'status', 'catatan_field', 'pengambilan', 'revisi',
     ];
 
     protected $casts = [
         'tanggal_dibutuhkan' => 'date',
         'catatan_field' => 'array',
+        'pengambilan' => 'array',
     ];
 
     /** Perubahan status yang diizinkan (oleh petugas TU). */
@@ -39,7 +40,45 @@ class Pengajuan extends Model
 
     public function lampiran(): HasMany
     {
-        return $this->hasMany(PengajuanLampiran::class)->orderBy('id');
+        return $this->hasMany(PengajuanLampiran::class)->where('jenis', 'pemohon')->orderBy('id');
+    }
+
+    /** Dokumen hasil yang diunggah petugas TU. */
+    public function hasil(): HasMany
+    {
+        return $this->hasMany(PengajuanLampiran::class)->where('jenis', 'hasil')->orderBy('id');
+    }
+
+    /** Petunjuk pengambilan dalam satu kalimat, atau null bila belum diisi. */
+    public function ringkasPengambilan(): ?string
+    {
+        $p = $this->pengambilan;
+
+        if (!is_array($p) || empty($p['mode'])) {
+            return null;
+        }
+
+        $catatan = !empty($p['catatan']) ? ' ' . $p['catatan'] : '';
+
+        if ($p['mode'] === 'unduh') {
+            return 'Hasil dapat diunduh pada halaman pengajuan ini.' . $catatan;
+        }
+
+        $teks = 'Ambil hasil di ' . (!empty($p['lokasi']) ? $p['lokasi'] : 'Kantor Tata Usaha');
+
+        if (!empty($p['tanggal'])) {
+            $teks .= ', ' . \Illuminate\Support\Carbon::parse($p['tanggal'])->locale('id')->translatedFormat('l, j F Y');
+        }
+
+        if (!empty($p['jam_mulai'])) {
+            $teks .= ', pukul ' . str_replace(':', '.', $p['jam_mulai']);
+            if (!empty($p['jam_selesai'])) {
+                $teks .= ' - ' . str_replace(':', '.', $p['jam_selesai']);
+            }
+            $teks .= ' WIB';
+        }
+
+        return $teks . '.' . $catatan;
     }
 
     /** Tambah satu baris ke riwayat status. */
@@ -76,6 +115,16 @@ class Pengajuan extends Model
                 'nama' => $l->nama_asli,
                 'path' => '/pengajuan/lampiran/' . $l->id,
             ])->values()->all();
+
+            $data['hasil'] = $this->hasil->map(fn ($l) => [
+                'id' => $l->id,
+                'nama' => $l->nama_asli,
+                'path' => '/pengajuan/lampiran/' . $l->id,
+            ])->values()->all();
+
+            $data['pengambilan'] = $this->ringkasPengambilan()
+                ? ($this->pengambilan + ['ringkas' => $this->ringkasPengambilan()])
+                : null;
 
             $data['history'] = $this->riwayat->map(fn ($r) => [
                 'label' => $r->label,
