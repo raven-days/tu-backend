@@ -12,13 +12,14 @@ class Pengajuan extends Model
 
     protected $fillable = [
         'nomor', 'user_id', 'jenis', 'perihal', 'tanggal_dibutuhkan',
-        'keterangan', 'status', 'catatan_field', 'pengambilan', 'revisi',
+        'keterangan', 'data', 'status', 'catatan_field', 'pengambilan', 'revisi',
     ];
 
     protected $casts = [
         'tanggal_dibutuhkan' => 'date',
         'catatan_field' => 'array',
         'pengambilan' => 'array',
+        'data' => 'array',
     ];
 
     /** Perubahan status yang diizinkan (oleh petugas TU). */
@@ -102,6 +103,7 @@ class Pengajuan extends Model
             'perihal' => $this->perihal,
             'tanggal' => $this->tanggal_dibutuhkan->format('Y-m-d'),
             'keterangan' => $this->keterangan ?? '',
+            'data' => $this->data,
             'pemohon' => $this->user?->name,
             'ownerRole' => $this->user?->role,
             'status' => $this->status,

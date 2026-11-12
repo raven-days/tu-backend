@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\AsetController;
+use App\Http\Controllers\Admin\AdminAsetController;
 use App\Http\Controllers\Api\KontakController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Admin\AdminKontakController;
@@ -32,6 +34,7 @@ Route::get('/sk', [SuratKeputusanController::class, 'index']);
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 Route::get('/pengumuman', [PengumumanController::class, 'index']);
 Route::get('/banner', [BannerController::class, 'index']);
+Route::get('/aset/profil', [AsetController::class, 'profil']);
 Route::get('/hero', [HeroController::class, 'show']);
 Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show']);
 Route::get('/cek-status/{nomor}', [CekStatusController::class, 'show'])->middleware('throttle:20,1');
@@ -50,6 +53,8 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
 
     // Detail dan lampiran: pemilik pengajuan atau TU (izin dicek di controller)
     Route::get('/pengajuan/lampiran/{lampiran}', [PengajuanController::class, 'lampiran']);
+    Route::get('/aset/dokumen', [AsetController::class, 'dokumen']);
+    Route::get('/aset/dokumen/{dokumen}/file', [AsetController::class, 'file'])->middleware('throttle:60,1');
     Route::get('/pengajuan/{pengajuan:nomor}', [PengajuanController::class, 'show']);
 
     // Siswa/orang tua dan guru
@@ -123,6 +128,13 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
             Route::delete('/banner/{banner}', [AdminBannerController::class, 'destroy'])->middleware('sandi.ulang');
             Route::post('/hero', [HeroController::class, 'update']);
             });
+        Route::middleware('izin:aset')->group(function () {
+            Route::put('/aset/profil', [AdminAsetController::class, 'updateProfil']);
+            Route::get('/aset/dokumen', [AdminAsetController::class, 'dokumen']);
+            Route::post('/aset/dokumen', [AdminAsetController::class, 'store']);
+            Route::post('/aset/dokumen/{dokumen}', [AdminAsetController::class, 'update']);
+            Route::delete('/aset/dokumen/{dokumen}', [AdminAsetController::class, 'destroy'])->middleware('sandi.ulang');
+        });
     });
     }); 
 });

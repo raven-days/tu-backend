@@ -12,7 +12,11 @@ use App\Models\AuditLog;
 
 class AdminPengajuanController extends Controller
 {
-    private const KOLOM = ['jenis', 'perihal', 'tanggal', 'keterangan', 'lampiran'];
+private const KOLOM = [
+    'jenis', 'perihal', 'tanggal', 'keterangan', 'lampiran',
+    'pemohon', 'unit', 'acara', 'tujuan', 'tanggal_acara', 'waktu', 'tempat',
+    'disetujui_kepsek', 'penerima', 'keperluan', 'catatan',
+];
 
     /** Antrian: semua pengajuan, terbaru di atas. */
     public function index(Request $request)

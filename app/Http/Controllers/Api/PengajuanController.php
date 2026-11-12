@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Pengajuan;
 use App\Models\PengajuanLampiran;
+use App\Support\FormSurat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class PengajuanController extends Controller
 {
@@ -27,7 +29,7 @@ class PengajuanController extends Controller
     /** Kirim pengajuan baru. */
     public function store(Request $request)
     {
-        $data = $request->validate($this->aturan(true));
+        $data = $this->validasi($request, true);
         $user = $request->user();
 
         $pengajuan = DB::transaction(function () use ($data, $request, $user) {
@@ -37,6 +39,7 @@ class PengajuanController extends Controller
                 'perihal' => trim($data['perihal']),
                 'tanggal_dibutuhkan' => $data['tanggal'],
                 'keterangan' => $data['keterangan'] ?? null,
+                'data' => $data['data'] ?? null,
             ]);
 
             $p->update(['nomor' => sprintf('TU-%s-%05d', now()->format('Y'), $p->id)]);
@@ -66,14 +69,19 @@ class PengajuanController extends Controller
             return response()->json(['message' => 'Pengajuan ini tidak sedang menunggu perbaikan.'], 422);
         }
 
-        $data = $request->validate($this->aturan(false));
+        $data = $this->validasi($request, false);
 
         $tetap = array_map('intval', $data['lampiran_tetap'] ?? []);
         $baru = $request->file('lampiran', []);
         $adaTetap = $pengajuan->lampiran->filter(fn ($l) => in_array($l->id, $tetap, true));
+        $jumlah = $adaTetap->count() + count($baru);
 
-        if ($adaTetap->count() + count($baru) > self::MAKS_LAMPIRAN) {
+        if ($jumlah > self::MAKS_LAMPIRAN) {
             return response()->json(['message' => 'Maksimal ' . self::MAKS_LAMPIRAN . ' lampiran.'], 422);
+        }
+
+        if ($data['jenis'] === 'Surat Tugas' && $request->user()->role === 'guru' && $jumlah < 1) {
+            return response()->json(['message' => 'Surat Tugas wajib melampirkan dokumen pendukung.'], 422);
         }
 
         $hapusPath = [];
@@ -84,6 +92,7 @@ class PengajuanController extends Controller
                 'perihal' => trim($data['perihal']),
                 'tanggal_dibutuhkan' => $data['tanggal'],
                 'keterangan' => $data['keterangan'] ?? null,
+                'data' => $data['data'] ?? null,
                 'status' => 'Menunggu',
                 'catatan_field' => null,
                 'revisi' => $pengajuan->revisi + 1,
@@ -115,6 +124,29 @@ class PengajuanController extends Controller
         abort_unless(Storage::disk('public')->exists($lampiran->path), 404, 'File tidak ditemukan.');
 
         return Storage::disk('public')->response($lampiran->path, $lampiran->nama_asli);
+    }
+
+    /** Guru/tendik: form khusus per jenis surat. Lainnya: form umum. */
+    private function validasi(Request $request, bool $baru): array
+    {
+        if ($request->user()->role === 'guru') {
+            $jenis = $request->validate([
+                'jenis' => ['required', Rule::in(FormSurat::JENIS)],
+            ])['jenis'];
+
+            $aturan = $this->aturan($baru);
+            unset($aturan['jenis'], $aturan['perihal'], $aturan['tanggal'], $aturan['keterangan']);
+
+            if ($baru && $jenis === 'Surat Tugas') {
+                $aturan['lampiran'] = 'required|array|min:1|max:' . self::MAKS_LAMPIRAN;
+            }
+
+            $valid = $request->validate($aturan + FormSurat::aturan($jenis));
+
+            return FormSurat::olah($jenis, $valid);
+        }
+
+        return $request->validate($this->aturan($baru));
     }
 
     private function aturan(bool $baru): array
