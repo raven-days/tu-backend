@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDokumentasiController;
+use App\Http\Controllers\Api\FasilitasController;
 use App\Http\Controllers\Api\AnggaranController;
 use App\Http\Controllers\Admin\AdminAnggaranController;
 use App\Http\Controllers\Api\SiswaController;
@@ -45,6 +47,11 @@ Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show']);
 Route::get('/cek-status/{nomor}', [CekStatusController::class, 'show'])->middleware('throttle:20,1');
 Route::get('/kontak', [KontakController::class, 'show']);
 Route::get('/faq', [FaqController::class, 'index']);
+Route::get('/fasilitas', [FasilitasController::class, 'index']);
+Route::get('/fasilitas/lokasi/{lokasi}', [FasilitasController::class, 'lokasi']);
+Route::get('/fasilitas/foto/{foto}/{ukuran}', [FasilitasController::class, 'foto'])
+    ->whereIn('ukuran', ['kecil', 'besar'])
+    ->name('fasilitas.foto');
 
 // Perlu login
 Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
@@ -145,6 +152,21 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
             Route::post('/faq/{faq}/geser', [AdminFaqController::class, 'geser']);
             Route::delete('/faq/{faq}', [AdminFaqController::class, 'destroy'])->middleware('sandi.ulang');
         });
+
+        Route::middleware('izin:dokumentasi')->group(function () {
+            Route::get('/dokumentasi/lokasi', [AdminDokumentasiController::class, 'lokasiIndex']);
+            Route::post('/dokumentasi/lokasi', [AdminDokumentasiController::class, 'lokasiStore']);
+            Route::put('/dokumentasi/lokasi/{lokasi}', [AdminDokumentasiController::class, 'lokasiUpdate']);
+            Route::delete('/dokumentasi/lokasi/{lokasi}', [AdminDokumentasiController::class, 'lokasiDestroy'])->middleware('sandi.ulang');
+
+            Route::get('/dokumentasi', [AdminDokumentasiController::class, 'index']);
+            Route::post('/dokumentasi', [AdminDokumentasiController::class, 'store']);
+            Route::delete('/dokumentasi/foto/{foto}', [AdminDokumentasiController::class, 'hapusFoto']);
+            Route::get('/dokumentasi/{dokumentasi}', [AdminDokumentasiController::class, 'show']);
+            Route::post('/dokumentasi/{dokumentasi}', [AdminDokumentasiController::class, 'update']);
+            Route::delete('/dokumentasi/{dokumentasi}', [AdminDokumentasiController::class, 'destroy'])->middleware('sandi.ulang');
+        });
+
         Route::middleware('izin:banner')->group(function () {
             Route::get('/banner', [AdminBannerController::class, 'index']);
             Route::post('/banner', [AdminBannerController::class, 'store']);
@@ -153,6 +175,7 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
             Route::delete('/banner/{banner}', [AdminBannerController::class, 'destroy'])->middleware('sandi.ulang');
             Route::post('/hero', [HeroController::class, 'update']);
             });
+            
         Route::middleware('izin:aset')->group(function () {
             Route::put('/aset/profil', [AdminAsetController::class, 'updateProfil']);
             Route::get('/aset/dokumen', [AdminAsetController::class, 'dokumen']);

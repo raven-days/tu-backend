@@ -31,5 +31,7 @@ RUN mkdir -p storage/framework/sessions \
 
 EXPOSE 8080
 
+RUN printf "upload_max_filesize=10M\npost_max_size=80M\nmemory_limit=256M\n" > /usr/local/etc/php/conf.d/unggah.ini
+
 # Migrasi, tautan storage, lalu jalankan server
 CMD sh -c "php artisan migrate --force && php artisan storage:link --force; php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
