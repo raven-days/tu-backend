@@ -22,12 +22,24 @@ class Pengajuan extends Model
         'data' => 'array',
     ];
 
-    /** Perubahan status yang diizinkan (oleh petugas TU). */
-    public const TRANSISI = [
-        'Menunggu' => ['Diverifikasi', 'Perlu Perbaikan', 'Ditolak'],
-        'Diverifikasi' => ['Disetujui', 'Perlu Perbaikan', 'Ditolak'],
-        'Disetujui' => ['Selesai'],
-    ];
+/** Perubahan status yang diizinkan (oleh petugas TU). */
+public const TRANSISI = [
+    'Menunggu' => ['Diverifikasi', 'Perlu Perbaikan', 'Ditolak'],
+    'Diverifikasi' => ['Pembuatan Draf', 'Perlu Perbaikan', 'Ditolak'],
+    'Pembuatan Draf' => ['Verifikasi Kasubag', 'Ditolak'],
+    'Verifikasi Kasubag' => ['Tanda Tangan', 'Pembuatan Draf', 'Ditolak'],
+    'Tanda Tangan' => ['Selesai'],
+];
+
+/** Nama langkah yang tampil di riwayat. */
+public const LABEL = [
+    'Menunggu' => 'Pengajuan terkirim',
+    'Diverifikasi' => 'Verifikasi kelengkapan data',
+    'Pembuatan Draf' => 'Proses pembuatan draf surat',
+    'Verifikasi Kasubag' => 'Verifikasi kelayakan surat (Kasubag)',
+    'Tanda Tangan' => 'Proses tanda tangan Kepala Sekolah',
+    'Selesai' => 'Selesai',
+];
 
     public function user(): BelongsTo
     {

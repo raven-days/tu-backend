@@ -20,7 +20,7 @@ class CekStatusController extends Controller
             'jenis' => $p->jenis,
             'status' => $p->status,
             'pemohon' => $this->samarkan($p->user?->name),
-            'pengambilan' => in_array($p->status, ['Disetujui', 'Selesai'], true) ? $p->ringkasPengambilan() : null,
+            'pengambilan' => $p->status === 'Selesai' ? $p->ringkasPengambilan() : null,
             'history' => $p->riwayat->map(fn ($r) => [
                 'label' => $r->label,
                 'status' => $r->status,

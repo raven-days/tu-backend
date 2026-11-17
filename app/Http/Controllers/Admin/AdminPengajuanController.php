@@ -16,7 +16,9 @@ private const KOLOM = [
     'jenis', 'perihal', 'tanggal', 'keterangan', 'lampiran',
     'pemohon', 'unit', 'acara', 'tujuan', 'tanggal_acara', 'waktu', 'tempat',
     'disetujui_kepsek', 'penerima', 'keperluan', 'catatan',
-];
+    'nama_dokumen', 'nis', 'tahu_pembina', 'tahu_wakasis', 'kegiatan',
+    'penyelenggara', 'tanggal_kegiatan', 'sudah_bertemu',
+    ];
 
     /** Antrian: semua pengajuan, terbaru di atas. */
     public function index(Request $request)
@@ -79,7 +81,10 @@ private const KOLOM = [
         }
 
         $bawaan = [
-            'Diverifikasi' => 'Berkas sudah diperiksa.',
+            'Diverifikasi' => 'Data dinyatakan lengkap.',
+            'Pembuatan Draf' => 'Admin sedang menyusun dan mencetak draf surat.',
+            'Verifikasi Kasubag' => 'Draf surat diperiksa kelayakannya oleh Kasubag TU.',
+            'Tanda Tangan' => 'Surat diteruskan ke Kepala Sekolah untuk ditandatangani.',
             'Selesai' => $pengajuan->ringkasPengambilan() ?? 'Hasil dapat diunduh pada halaman pengajuan ini.',
         ];
         if ($catatan === '' && isset($bawaan[$tujuan])) {
@@ -91,7 +96,7 @@ private const KOLOM = [
                 'status' => $tujuan,
                 'catatan_field' => $field ?: null,
             ]);
-            $pengajuan->catat($tujuan, $tujuan, $request->user()->name, $catatan ?: null, $field ?: null);
+            $pengajuan->catat(Pengajuan::LABEL[$tujuan] ?? $tujuan, $tujuan, $request->user()->name, $catatan ?: null, $field ?: null);
         });
         AuditLog::catat('pengajuan_status', "Ubah status {$pengajuan->nomor} menjadi {$tujuan}.", null, 'pengajuan', $pengajuan->id);
 
@@ -102,8 +107,8 @@ private const KOLOM = [
     /** Tambah dokumen hasil dan/atau petunjuk pengambilan (saat Disetujui atau Selesai). */
     public function hasil(Request $request, Pengajuan $pengajuan)
     {
-        if (!in_array($pengajuan->status, ['Disetujui', 'Selesai'], true)) {
-            return response()->json(['message' => 'Hasil hanya bisa diisi setelah pengajuan disetujui.'], 422);
+        if (!in_array($pengajuan->status, ['Tanda Tangan', 'Selesai'], true)) {
+            return response()->json(['message' => 'Hasil hanya bisa diisi saat tahap tanda tangan Kepala Sekolah.'], 422);
         }
 
         $v = $request->validate([

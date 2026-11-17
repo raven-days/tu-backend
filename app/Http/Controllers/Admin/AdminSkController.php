@@ -55,8 +55,11 @@ class AdminSkController extends Controller
     private function validasi(Request $request): array
     {
         $data = $request->validate([
+            'jenis' => 'required|in:sk,sop',
             'nomor' => 'required|string|max:100',
             'tentang' => 'required|string|max:255',
+            'penerbit' => 'nullable|string|max:150',
+            'bidang' => 'nullable|string|max:100',
             'tahun' => 'required|integer|min:1990|max:2100',
             'kategori' => 'nullable|string|max:100',
             'file' => 'nullable|file|mimes:pdf|max:5120',

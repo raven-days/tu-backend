@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\AnggaranController;
+use App\Http\Controllers\Admin\AdminAnggaranController;
+use App\Http\Controllers\Api\SiswaController;
+use App\Http\Controllers\Admin\AdminSiswaController;
 use App\Http\Controllers\Api\AsetController;
 use App\Http\Controllers\Admin\AdminAsetController;
 use App\Http\Controllers\Api\KontakController;
@@ -30,12 +34,13 @@ use App\Http\Controllers\Admin\AdminResetController;
 // Publik
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::post('/lupa-kata-sandi', [LupaSandiController::class, 'store'])->middleware('throttle:3,1');
-Route::get('/sk', [SuratKeputusanController::class, 'index']);
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 Route::get('/pengumuman', [PengumumanController::class, 'index']);
 Route::get('/banner', [BannerController::class, 'index']);
 Route::get('/aset/profil', [AsetController::class, 'profil']);
 Route::get('/hero', [HeroController::class, 'show']);
+Route::get('/anggaran', [AnggaranController::class, 'index'])->middleware('throttle:60,1');
+Route::get('/anggaran/{dok}/berkas', [AnggaranController::class, 'berkas'])->middleware('throttle:60,1');
 Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show']);
 Route::get('/cek-status/{nomor}', [CekStatusController::class, 'show'])->middleware('throttle:20,1');
 Route::get('/kontak', [KontakController::class, 'show']);
@@ -57,6 +62,11 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
     Route::get('/aset/dokumen/{dokumen}/file', [AsetController::class, 'file'])->middleware('throttle:60,1');
     Route::get('/pengajuan/{pengajuan:nomor}', [PengajuanController::class, 'show']);
 
+    // SK & SOP: semua akun yang login
+    Route::get('/sk', [SuratKeputusanController::class, 'index']);
+    Route::get('/sk/{sk}/berkas', [SuratKeputusanController::class, 'berkas']);
+
+    Route::get('/siswa/cari', [SiswaController::class, 'cari'])->middleware('throttle:60,1');
     // Siswa/orang tua dan guru
     Route::middleware('role:siswa,guru')->group(function () {
         Route::get('/pengajuan', [PengajuanController::class, 'index']);
@@ -111,6 +121,21 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
             Route::post('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'update']);
             Route::delete('/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])->middleware('sandi.ulang');
         });
+
+        Route::middleware('izin:siswa')->group(function () {
+            Route::get('/siswa', [AdminSiswaController::class, 'index']);
+            Route::post('/siswa', [AdminSiswaController::class, 'store']);
+            Route::post('/siswa/import', [AdminSiswaController::class, 'import'])->middleware('throttle:5,1');
+            Route::put('/siswa/{siswa}', [AdminSiswaController::class, 'update']);
+            Route::delete('/siswa/{siswa}', [AdminSiswaController::class, 'destroy']);
+        });        
+
+        Route::middleware('izin:anggaran')->group(function () {
+            Route::post('/anggaran', [AdminAnggaranController::class, 'store']);
+            Route::post('/anggaran/{dok}', [AdminAnggaranController::class, 'update']);
+            Route::delete('/anggaran/{dok}', [AdminAnggaranController::class, 'destroy'])->middleware('sandi.ulang');
+        });
+
         Route::middleware('izin:kontak')->group(function () {
             Route::get('/kontak', [AdminKontakController::class, 'show']);
             Route::put('/kontak', [AdminKontakController::class, 'update']);

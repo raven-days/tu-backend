@@ -44,7 +44,7 @@ class PengajuanController extends Controller
 
             $p->update(['nomor' => sprintf('TU-%s-%05d', now()->format('Y'), $p->id)]);
             $this->simpanLampiran($p, $request->file('lampiran', []));
-            $p->catat('Diajukan', 'Menunggu', $user->name);
+            $p->catat('Pengajuan terkirim', 'Menunggu', $user->name);
 
             return $p;
         });
@@ -80,9 +80,9 @@ class PengajuanController extends Controller
             return response()->json(['message' => 'Maksimal ' . self::MAKS_LAMPIRAN . ' lampiran.'], 422);
         }
 
-        if ($data['jenis'] === 'Surat Tugas' && $request->user()->role === 'guru' && $jumlah < 1) {
-            return response()->json(['message' => 'Surat Tugas wajib melampirkan dokumen pendukung.'], 422);
-        }
+if (FormSurat::wajibLampiran($request->user()->role, $data['jenis']) && $jumlah < 1) {
+    return response()->json(['message' => 'Jenis surat ini wajib melampirkan dokumen pendukung.'], 422);
+}
 
         $hapusPath = [];
 
@@ -126,28 +126,30 @@ class PengajuanController extends Controller
         return Storage::disk('public')->response($lampiran->path, $lampiran->nama_asli);
     }
 
-    /** Guru/tendik: form khusus per jenis surat. Lainnya: form umum. */
-    private function validasi(Request $request, bool $baru): array
-    {
-        if ($request->user()->role === 'guru') {
-            $jenis = $request->validate([
-                'jenis' => ['required', Rule::in(FormSurat::JENIS)],
-            ])['jenis'];
+/** Guru/tendik dan siswa: form khusus per jenis surat. */
+private function validasi(Request $request, bool $baru): array
+{
+    $role = $request->user()->role;
 
-            $aturan = $this->aturan($baru);
-            unset($aturan['jenis'], $aturan['perihal'], $aturan['tanggal'], $aturan['keterangan']);
+    if (FormSurat::adaForm($role)) {
+        $jenis = $request->validate([
+            'jenis' => ['required', Rule::in(FormSurat::JENIS[$role])],
+        ])['jenis'];
 
-            if ($baru && $jenis === 'Surat Tugas') {
-                $aturan['lampiran'] = 'required|array|min:1|max:' . self::MAKS_LAMPIRAN;
-            }
+        $aturan = $this->aturan($baru);
+        unset($aturan['jenis'], $aturan['perihal'], $aturan['tanggal'], $aturan['keterangan']);
 
-            $valid = $request->validate($aturan + FormSurat::aturan($jenis));
-
-            return FormSurat::olah($jenis, $valid);
+        if ($baru && FormSurat::wajibLampiran($role, $jenis)) {
+            $aturan['lampiran'] = 'required|array|min:1|max:' . self::MAKS_LAMPIRAN;
         }
 
-        return $request->validate($this->aturan($baru));
+        $valid = $request->validate($aturan + FormSurat::aturan($role, $jenis));
+
+        return FormSurat::olah($role, $jenis, $valid);
     }
+
+    return $request->validate($this->aturan($baru));
+}
 
     private function aturan(bool $baru): array
     {

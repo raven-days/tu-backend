@@ -15,7 +15,7 @@ class RingkasanController extends Controller
         return response()->json([
             'sk' => SuratKeputusan::count(),
             'pengumuman' => Pengumuman::count(),
-            'pengajuan' => Pengajuan::whereIn('status', ['Menunggu', 'Diverifikasi'])->count(),
+            'pengajuan' => Pengajuan::whereNotIn('status', ['Selesai', 'Ditolak', 'Perlu Perbaikan'])->count(),
             'guru' => Pegawai::where('kategori', 'guru')->count(),
             'tendik' => Pegawai::where('kategori', 'tendik')->count(),
         ]);
