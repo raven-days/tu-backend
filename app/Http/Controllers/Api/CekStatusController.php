@@ -9,7 +9,7 @@ class CekStatusController extends Controller
 {
     public function show(string $nomor)
     {
-        $p = Pengajuan::with(['user', 'riwayat'])->where('nomor', strtoupper(trim($nomor)))->first();
+        $p = Pengajuan::with(['user', 'riwayat'])->where('jalur', 'akun')->where('nomor', strtoupper(trim($nomor)))->first();
 
         if (!$p) {
             return response()->json(['message' => 'Nomor pengajuan tidak ditemukan.'], 404);

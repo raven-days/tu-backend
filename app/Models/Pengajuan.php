@@ -53,13 +53,13 @@ public const LABEL = [
 
     public function lampiran(): HasMany
     {
-        return $this->hasMany(PengajuanLampiran::class)->where('jenis', 'pemohon')->orderBy('id');
+        return $this->hasMany(PengajuanLampiran::class)->where('jenis', 'pemohon')->whereNull('dihapus_pada')->orderBy('id');
     }
 
     /** Dokumen hasil yang diunggah petugas TU. */
     public function hasil(): HasMany
     {
-        return $this->hasMany(PengajuanLampiran::class)->where('jenis', 'hasil')->orderBy('id');
+        return $this->hasMany(PengajuanLampiran::class)->where('jenis', 'hasil')->whereNull('dihapus_pada')->orderBy('id');
     }
 
     /** Petunjuk pengambilan dalam satu kalimat, atau null bila belum diisi. */
@@ -116,8 +116,9 @@ public const LABEL = [
             'tanggal' => $this->tanggal_dibutuhkan->format('Y-m-d'),
             'keterangan' => $this->keterangan ?? '',
             'data' => $this->data,
-            'pemohon' => $this->user?->name,
-            'ownerRole' => $this->user?->role,
+            'pemohon' => $this->user?->name ?? ($this->data['pemohon_nama'] ?? 'Tamu'),
+            'ownerRole' => $this->user?->role ?? 'tamu',
+            'jalur' => $this->jalur ?? 'akun',
             'status' => $this->status,
             'revisi' => $this->revisi,
             'fieldNotes' => (object) ($this->catatan_field ?? []),

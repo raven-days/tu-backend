@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\WajibCaptcha;
 use App\Http\Controllers\Admin\AdminDokumentasiController;
 use App\Http\Controllers\Api\FasilitasController;
 use App\Http\Controllers\Api\AnggaranController;
@@ -32,9 +33,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HeroController;
 use App\Http\Controllers\Api\LupaSandiController;
 use App\Http\Controllers\Admin\AdminResetController;
+use App\Http\Controllers\Api\LayananPengajuanController;
+use App\Http\Controllers\Api\TamuPengajuanController;
+use App\Http\Controllers\Admin\AdminLayananPengajuanController;
 
 // Publik
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:10,1', WajibCaptcha::class]);
 Route::post('/lupa-kata-sandi', [LupaSandiController::class, 'store'])->middleware('throttle:3,1');
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 Route::get('/pengumuman', [PengumumanController::class, 'index']);
@@ -45,6 +49,12 @@ Route::get('/anggaran', [AnggaranController::class, 'index'])->middleware('throt
 Route::get('/anggaran/{dok}/berkas', [AnggaranController::class, 'berkas'])->middleware('throttle:60,1');
 Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show']);
 Route::get('/cek-status/{nomor}', [CekStatusController::class, 'show'])->middleware('throttle:20,1');
+Route::get('/layanan-pengajuan', [LayananPengajuanController::class, 'index'])->middleware('throttle:60,1');
+Route::get('/layanan-pengajuan/{slug}', [LayananPengajuanController::class, 'show'])->middleware('throttle:60,1');
+Route::post('/tamu/pengajuan', [TamuPengajuanController::class, 'store'])->middleware('throttle:20,1');
+Route::post('/tamu/cek-status', [TamuPengajuanController::class, 'cekStatus'])->middleware('throttle:30,1');
+Route::post('/tamu/data-perbaikan', [TamuPengajuanController::class, 'dataPerbaikan'])->middleware('throttle:30,1');
+Route::post('/tamu/perbaikan', [TamuPengajuanController::class, 'perbaiki'])->middleware('throttle:20,1');
 Route::get('/kontak', [KontakController::class, 'show']);
 Route::get('/faq', [FaqController::class, 'index']);
 Route::get('/fasilitas', [FasilitasController::class, 'index']);
@@ -141,6 +151,13 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
             Route::post('/anggaran', [AdminAnggaranController::class, 'store']);
             Route::post('/anggaran/{dok}', [AdminAnggaranController::class, 'update']);
             Route::delete('/anggaran/{dok}', [AdminAnggaranController::class, 'destroy'])->middleware('sandi.ulang');
+        });
+
+        Route::middleware('izin:layanan')->group(function () {
+            Route::get('/layanan-pengajuan', [AdminLayananPengajuanController::class, 'index']);
+            Route::post('/layanan-pengajuan', [AdminLayananPengajuanController::class, 'store']);
+            Route::post('/layanan-pengajuan/{layanan}', [AdminLayananPengajuanController::class, 'update']);
+            Route::delete('/layanan-pengajuan/{layanan}', [AdminLayananPengajuanController::class, 'destroy'])->middleware('sandi.ulang');
         });
 
         Route::middleware('izin:kontak')->group(function () {

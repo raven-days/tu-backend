@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Crypt;
 
 class PengajuanController extends Controller
 {
@@ -116,12 +117,28 @@ if (FormSurat::wajibLampiran($request->user()->role, $data['jenis']) && $jumlah 
         return response()->json($pengajuan->fresh(['user', 'riwayat', 'lampiran'])->tampil());
     }
 
-    /** Buka file lampiran (hanya pemilik pengajuan atau petugas TU). */
+    /** Buka file lampiran (hanya pemilik pengajuan atau petugas TU berizin). */
     public function lampiran(Request $request, PengajuanLampiran $lampiran)
     {
         $this->izinkan($request, $lampiran->pengajuan);
 
+        abort_if($lampiran->dihapus_pada, 410, 'Lampiran sudah dihapus sesuai kebijakan retensi.');
         abort_unless(Storage::disk('public')->exists($lampiran->path), 404, 'File tidak ditemukan.');
+
+        if ($lampiran->terenkripsi) {
+            try {
+                $isi = Crypt::decryptString(Storage::disk('public')->get($lampiran->path));
+            } catch (\Throwable) {
+                abort(500, 'File tidak dapat dibuka.');
+            }
+
+            return response($isi, 200, [
+                'Content-Type' => $lampiran->mime ?: 'application/octet-stream',
+                'Content-Disposition' => 'inline; filename="lampiran-' . $lampiran->id . '"',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, no-store',
+            ]);
+        }
 
         return Storage::disk('public')->response($lampiran->path, $lampiran->nama_asli);
     }
